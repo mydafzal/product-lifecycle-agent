@@ -1,0 +1,16 @@
+action_id,sku_id,action_type,params,confirmation
+ACT_001,SKU_0001,launch_campaign,param_set_1,confirmed
+ACT_002,SKU_0002,request_labor_hours,param_set_2,confirmed
+ACT_003,SKU_0003,launch_campaign,param_set_3,pending
+ACT_004,SKU_0004,launch_price_change,param_set_4,confirmed
+ACT_005,SKU_0005,request_labor_hours,param_set_5,confirmed
+ACT_006,SKU_0006,launch_campaign,param_set_6,pending
+ACT_007,SKU_0007,request_labor_hours,param_set_7,confirmed
+ACT_008,SKU_0008,launch_price_change,param_set_8,confirmed
+ACT_009,SKU_0009,launch_campaign,param_set_9,confirmed
+ACT_010,SKU_0010,launch_price_change,param_set_10,confirmed
+ACT_011,SKU_0011,request_labor_hours,param_set_11,confirmed
+ACT_012,SKU_0012,launch_campaign,param_set_12,confirmed
+ACT_013,SKU_0013,request_labor_hours,param_set_13,confirmed
+ACT_014,SKU_0014,request_labor_hours,param_set_14,confirmed
+ACT_015,SKU_0015,launch_campaign,param_set_15,confirmed

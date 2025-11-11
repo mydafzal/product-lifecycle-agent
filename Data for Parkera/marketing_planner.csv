@@ -1,0 +1,16 @@
+sku_id,channels,spend,lift
+SKU_0001,"Email, Display, TikTok",2113.1,0.19
+SKU_0002,"Instagram, Display",1021.41,0.24
+SKU_0003,Email,4383.97,0.17
+SKU_0004,"Display, Email, TikTok",3304.84,0.18
+SKU_0005,"Email, Display",1989.04,0.16
+SKU_0006,Instagram,786.01,0.06
+SKU_0007,Display,1899.42,0.08
+SKU_0008,"Email, Instagram, TikTok",1963.32,0.06
+SKU_0009,"Display, Search, Email",3783.23,0.21
+SKU_0010,"Display, TikTok",3369.01,0.13
+SKU_0011,Instagram,4492.46,0.18
+SKU_0012,"Search, TikTok, Instagram",2624.97,0.28
+SKU_0013,Instagram,1038.17,0.11
+SKU_0014,"Email, Display",3709.6,0.15
+SKU_0015,"Email, TikTok",3923.53,0.24
