@@ -1,0 +1,18 @@
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+
+# CrewAI framework
+crewai>=0.1.0
+crewai-tools>=0.1.0
+
+# HTTP client for MCP servers
+requests>=2.31.0
+
+# MCP Servers (FastAPI)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
