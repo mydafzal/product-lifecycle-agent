@@ -152,3 +152,79 @@ def read_json(path):
     """
     with open(path, "r") as f:
         return json.load(f)
+
+def get_marketing_planner_data(sku_id=None):
+    """
+    Returns marketing channels, spend, and lift per SKU as DataFrame.
+    
+    Args:
+        sku_id: Optional SKU filter
+    
+    Returns:
+        DataFrame with sku_id, channels, spend, lift
+    """
+    if USE_MCP_SERVERS:
+        try:
+            response = requests.post(
+                f"{settings.MARKETING_PLANNER_SERVER_URL}/marketing_planner",
+                json={"sku_id": sku_id} if sku_id else {},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            if data.get("status") == "success":
+                return pd.DataFrame(data["data"])
+            else:
+                logger.error(f"MCP server error: {data.get('error')}")
+                raise Exception(data.get("error", "Unknown error"))
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to connect to marketing planner MCP server: {e}")
+            logger.info("Falling back to direct CSV access")
+            df = pd.read_csv(settings.MARKETING_PLANNER_INPUT)
+            if sku_id:
+                df = df[df["sku_id"] == sku_id]
+            return df
+    else:
+        # Direct CSV access
+        df = pd.read_csv(settings.MARKETING_PLANNER_INPUT)
+        if sku_id:
+            df = df[df["sku_id"] == sku_id]
+        return df
+
+def get_labor_simulator_data(sku_id=None):
+    """
+    Returns labor hours and cost per SKU as DataFrame.
+    
+    Args:
+        sku_id: Optional SKU filter
+    
+    Returns:
+        DataFrame with sku_id, labor_hours, cost
+    """
+    if USE_MCP_SERVERS:
+        try:
+            response = requests.post(
+                f"{settings.LABOR_SIMULATOR_SERVER_URL}/labor_simulator",
+                json={"sku_id": sku_id} if sku_id else {},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            if data.get("status") == "success":
+                return pd.DataFrame(data["data"])
+            else:
+                logger.error(f"MCP server error: {data.get('error')}")
+                raise Exception(data.get("error", "Unknown error"))
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to connect to labor simulator MCP server: {e}")
+            logger.info("Falling back to direct CSV access")
+            df = pd.read_csv(settings.LABOR_SIMULATOR_INPUT)
+            if sku_id:
+                df = df[df["sku_id"] == sku_id]
+            return df
+    else:
+        # Direct CSV access
+        df = pd.read_csv(settings.LABOR_SIMULATOR_INPUT)
+        if sku_id:
+            df = df[df["sku_id"] == sku_id]
+        return df

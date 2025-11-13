@@ -1,0 +1,10 @@
+sku_id,channels,total_spend,expected_lift_units,notes
+SKU_0001,"Email, Display, TikTok",2113.1,60.81263157894739,"Channels: Email, Display, TikTok | Combined with pricing lift: 22 units"
+SKU_0005,"Email, Display",1989.04,43.693684210526335,"Channels: Email, Display | Combined with pricing lift: 11 units"
+SKU_0006,Instagram,786.01,35.55000000000005,Channels: Instagram | Combined with pricing lift: 25 units
+SKU_0007,Display,1899.42,86.31578947368425,Channels: Display | Combined with pricing lift: 22 units
+SKU_0008,"Email, Instagram, TikTok",1963.32,13.957894736842102,"Channels: Email, Instagram, TikTok | Combined with pricing lift: 7 units"
+SKU_0010,"Display, TikTok",3369.01,63.50842105263165,"Channels: Display, TikTok | Combined with pricing lift: 35 units"
+SKU_0011,Instagram,4492.46,130.47789473684216,Channels: Instagram | Combined with pricing lift: 29 units
+SKU_0012,"Search, TikTok, Instagram",2624.97,108.24736842105266,"Channels: Search, TikTok, Instagram | Combined with pricing lift: 20 units"
+SKU_0015,"Email, TikTok",3923.53,72.53631578947375,"Channels: Email, TikTok | Combined with pricing lift: 28 units"

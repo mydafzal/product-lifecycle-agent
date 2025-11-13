@@ -1,0 +1,10 @@
+sku_id,sales,forecast,plan,gap_pct,reason
+SKU_0001,202,522,659,0.6130268199233716,Underperforming by 61.3% (sales < forecast)
+SKU_0005,206,811,947,0.7459926017262639,Underperforming by 74.6% (sales < forecast)
+SKU_0006,171,458,1056,0.6266375545851528,Underperforming by 62.7% (sales < forecast)
+SKU_0007,800,919,760,0.1294885745375408,Underperforming by 12.9% (sales < forecast)
+SKU_0008,120,493,674,0.7565922920892495,Underperforming by 75.7% (sales < forecast)
+SKU_0010,221,563,710,0.6074600355239786,Underperforming by 60.7% (sales < forecast)
+SKU_0011,566,955,881,0.4073298429319372,Underperforming by 40.7% (sales < forecast)
+SKU_0012,314,535,675,0.4130841121495327,Underperforming by 41.3% (sales < forecast)
+SKU_0015,187,310,389,0.3967741935483871,Underperforming by 39.7% (sales < forecast)

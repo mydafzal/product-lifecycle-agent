@@ -36,6 +36,7 @@ PRICE_SCENARIOS = OUTPUT_DIR / "price_scenarios.csv"
 CAMPAIGN_SCENARIOS = OUTPUT_DIR / "campaign_scenarios.csv"
 LABOR_ESTIMATES = OUTPUT_DIR / "labor_cost_estimates.csv"
 RANKED_PLAN = OUTPUT_DIR / "ranked_action_plan.csv"
+PRODUCT_FEEDBACK = OUTPUT_DIR / "product_feedback.csv"
 FINAL_ACTIONS = OUTPUT_DIR / "finalized_actions.csv"
 
 # Logs

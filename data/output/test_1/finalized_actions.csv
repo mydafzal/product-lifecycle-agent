@@ -1,0 +1,10 @@
+sku_id,rank,action_type,decision,reason,roi
+SKU_0007,1,price+marketing,manual-review,Product review needed: Inventory may not cover expected lift | Long lead time (18 days),3759.057842105265
+SKU_0006,2,price+marketing,auto-approved,All guardrails satisfied,2417.9190000000044
+SKU_0015,3,price+marketing,manual-review,Labor cost ($248.32) exceeds $200.0 cap,2087.3036894736897
+SKU_0012,4,price+marketing,manual-review,Labor cost ($314.30) exceeds $200.0 cap,2042.270894736844
+SKU_0005,5,price+marketing,manual-review,Labor cost ($265.18) exceeds $200.0 cap,1903.2340526315816
+SKU_0001,6,price+marketing,manual-review,Product review needed: Long lead time (19 days),1677.2280105263171
+SKU_0008,7,price+marketing,rejected,Negative ROI ($-809.26),-809.2569473684216
+SKU_0010,8,price+marketing,rejected,"Negative ROI ($-1,191.63)",-1191.6316210526293
+SKU_0011,9,price+marketing,rejected,"Negative ROI ($-1,559.72)",-1559.716905263157

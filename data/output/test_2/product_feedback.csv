@@ -1,0 +1,10 @@
+sku_id,rank,decision,risk_level,feedback,constraints
+SKU_0007,1,review,medium,Inventory may not cover expected lift | Long lead time (18 days),"inventory_risk, long_lead_time"
+SKU_0006,2,accept,low,All constraints satisfied,none
+SKU_0015,3,review,medium,Long lead time (26 days),long_lead_time
+SKU_0012,4,accept,low,All constraints satisfied,none
+SKU_0005,5,review,medium,Long lead time (19 days),long_lead_time
+SKU_0001,6,review,medium,Long lead time (19 days),long_lead_time
+SKU_0008,7,review,high,Long lead time (21 days) | Negative ROI ($-809.26),"long_lead_time, negative_roi"
+SKU_0010,8,review,high,"Long lead time (22 days) | Negative ROI ($-1,191.63)","long_lead_time, negative_roi"
+SKU_0011,9,review,high,"Inventory may not cover expected lift | Negative ROI ($-1,559.72)","inventory_risk, negative_roi"

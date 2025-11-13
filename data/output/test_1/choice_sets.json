@@ -1,0 +1,92 @@
+[
+  {
+    "set_id": "SKU_0001",
+    "skus": [
+      "SKU_0001"
+    ],
+    "rationale": "Underperforming by 61.3% (sales < forecast)",
+    "gap_pct": 0.6130268199233716,
+    "sales": 202,
+    "forecast": 522
+  },
+  {
+    "set_id": "SKU_0005",
+    "skus": [
+      "SKU_0005"
+    ],
+    "rationale": "Underperforming by 74.6% (sales < forecast)",
+    "gap_pct": 0.7459926017262639,
+    "sales": 206,
+    "forecast": 811
+  },
+  {
+    "set_id": "SKU_0006",
+    "skus": [
+      "SKU_0006"
+    ],
+    "rationale": "Underperforming by 62.7% (sales < forecast)",
+    "gap_pct": 0.6266375545851528,
+    "sales": 171,
+    "forecast": 458
+  },
+  {
+    "set_id": "SKU_0007",
+    "skus": [
+      "SKU_0007"
+    ],
+    "rationale": "Underperforming by 12.9% (sales < forecast)",
+    "gap_pct": 0.1294885745375408,
+    "sales": 800,
+    "forecast": 919
+  },
+  {
+    "set_id": "SKU_0008",
+    "skus": [
+      "SKU_0008"
+    ],
+    "rationale": "Underperforming by 75.7% (sales < forecast)",
+    "gap_pct": 0.7565922920892495,
+    "sales": 120,
+    "forecast": 493
+  },
+  {
+    "set_id": "SKU_0010",
+    "skus": [
+      "SKU_0010"
+    ],
+    "rationale": "Underperforming by 60.7% (sales < forecast)",
+    "gap_pct": 0.6074600355239786,
+    "sales": 221,
+    "forecast": 563
+  },
+  {
+    "set_id": "SKU_0011",
+    "skus": [
+      "SKU_0011"
+    ],
+    "rationale": "Underperforming by 40.7% (sales < forecast)",
+    "gap_pct": 0.4073298429319372,
+    "sales": 566,
+    "forecast": 955
+  },
+  {
+    "set_id": "SKU_0012",
+    "skus": [
+      "SKU_0012"
+    ],
+    "rationale": "Underperforming by 41.3% (sales < forecast)",
+    "gap_pct": 0.4130841121495327,
+    "sales": 314,
+    "forecast": 535
+  },
+  {
+    "set_id": "SKU_0015",
+    "skus": [
+      "SKU_0015"
+    ],
+    "rationale": "Underperforming by 39.7% (sales < forecast)",
+    "gap_pct": 0.3967741935483871,
+    "sales": 187,
+    "forecast": 310
+  }
+]
