@@ -9,8 +9,9 @@ crewai-tools>=0.1.0
 # HTTP client for MCP servers
 requests>=2.31.0
 
-# MCP Servers (FastAPI)
-fastapi>=0.104.0
+# MCP Server
+mcp>=0.1.0
+starlette>=0.27.0
 uvicorn>=0.24.0
 
 # Utilities

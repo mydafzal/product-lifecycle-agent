@@ -43,7 +43,12 @@ FINAL_ACTIONS = OUTPUT_DIR / "finalized_actions.csv"
 AUDIT_LOG = LOGS_DIR / "audit_log.csv"
 APP_LOG = LOGS_DIR / "app.log"
 
-# MCP Server URLs (for future use)
-SALES_SERVER_URL = os.getenv("SALES_SERVER_URL", "http://localhost:8001")
-INVENTORY_SERVER_URL = os.getenv("INVENTORY_SERVER_URL", "http://localhost:8002")
-PRICE_OPTIMIZER_SERVER_URL = os.getenv("PRICE_OPTIMIZER_SERVER_URL", "http://localhost:8003")
+# MCP Server URL (centralized server with registered tools)
+MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+
+# Legacy URLs (deprecated - kept for reference)
+# SALES_SERVER_URL = os.getenv("SALES_SERVER_URL", "http://localhost:8001")
+# INVENTORY_SERVER_URL = os.getenv("INVENTORY_SERVER_URL", "http://localhost:8002")
+# PRICE_OPTIMIZER_SERVER_URL = os.getenv("PRICE_OPTIMIZER_SERVER_URL", "http://localhost:8003")
+MARKETING_PLANNER_SERVER_URL = os.getenv("MARKETING_PLANNER_SERVER_URL", "http://localhost:8004")
+LABOR_SIMULATOR_SERVER_URL = os.getenv("LABOR_SIMULATOR_SERVER_URL", "http://localhost:8005")

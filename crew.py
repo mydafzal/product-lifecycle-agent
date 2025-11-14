@@ -152,137 +152,189 @@ def create_pricing_task(agent, max_price_change=None):
     )
 
 
+def create_marketing_task(agent):
+    """Create task for MarketingAgent"""
+    return Task(
+        description=(
+            "For each flagged SKU, recommend marketing campaigns. "
+            "Allocate budget across channels to maximize lift. "
+            "Ensure campaigns stay within spend limits."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV file of campaign scenarios with channel mix, "
+            "spend allocation, and expected lift."
+        ),
+        callback=lambda _: run_marketing()
+    )
+
+
+def create_labor_task(agent):
+    """Create task for LaborAgent"""
+    return Task(
+        description=(
+            "Estimate labor costs and operational feasibility. "
+            "Calculate labor hours needed for volume increases. "
+            "Ensure labor costs stay within cap."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV file of labor cost estimates with hours, "
+            "costs, and feasibility flags."
+        ),
+        callback=lambda _: run_labor()
+    )
+
+
+def create_finance_task(agent):
+    """Create task for FinanceAgent"""
+    return Task(
+        description=(
+            "Calculate ROI and rank action plans by financial impact. "
+            "Compute incremental revenue, costs, and net profit. "
+            "Prioritize the most profitable actions."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV file of ranked action plans with ROI, "
+            "incremental revenue, and costs."
+        ),
+        callback=lambda _: run_finance()
+    )
+
+
+def create_product_task(agent):
+    """Create task for ProductAgent"""
+    return Task(
+        description=(
+            "Validate SKU constraints and provide product feedback. "
+            "Check inventory levels, lead times, and product constraints. "
+            "Flag any issues or concerns."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV file of product feedback with validation results, "
+            "inventory status, and recommendations."
+        ),
+        callback=lambda _: run_product()
+    )
+
+
+def create_governance_task(agent):
+    """Create task for GovernanceAgent"""
+    return Task(
+        description=(
+            "Apply guardrails and make final approval decisions. "
+            "Ensure all actions comply with business rules. "
+            "Generate final approved action list."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV file of finalized actions with approval status, "
+            "compliance flags, and final recommendations."
+        ),
+        callback=lambda _: run_governance()
+    )
+
+
 def create_crew(underperf_threshold=None, max_price_change=None):
     """
-    Create and configure the CrewAI crew with agents and tasks.
+    Create and configure the CrewAI crew with all 7 agents and tasks.
     
     Args:
         underperf_threshold: Override default underperformance threshold
         max_price_change: Override default max price change guardrail
     
     Returns:
-        Crew: Configured CrewAI crew
+        Crew: Configured CrewAI crew with complete workflow
     """
-    # Create agents
+    # Create all 7 agents
     trigger_agent = create_trigger_agent()
     pricing_agent = create_pricing_agent()
+    marketing_agent = create_marketing_agent()
+    labor_agent = create_labor_agent()
+    finance_agent = create_finance_agent()
+    product_agent = create_product_agent()
+    governance_agent = create_governance_agent()
     
-    # Create tasks
+    # Create all 7 tasks
     trigger_task = create_trigger_task(trigger_agent, underperf_threshold)
     pricing_task = create_pricing_task(pricing_agent, max_price_change)
+    marketing_task = create_marketing_task(marketing_agent)
+    labor_task = create_labor_task(labor_agent)
+    finance_task = create_finance_task(finance_agent)
+    product_task = create_product_task(product_agent)
+    governance_task = create_governance_task(governance_agent)
     
-    # Create crew with sequential process
+    # Create crew with sequential process (all 7 agents in workflow order)
     crew = Crew(
-        agents=[trigger_agent, pricing_agent],
-        tasks=[trigger_task, pricing_task],
-        process=Process.sequential,  # Run tasks in order
+        agents=[
+            trigger_agent,
+            pricing_agent,
+            marketing_agent,
+            labor_agent,
+            finance_agent,
+            product_agent,
+            governance_agent
+        ],
+        tasks=[
+            trigger_task,
+            pricing_task,
+            marketing_task,
+            labor_task,
+            finance_task,
+            product_task,
+            governance_task
+        ],
+        process=Process.sequential,  # Run tasks in order: Trigger -> Pricing -> Marketing -> Labor -> Finance -> Product -> Governance
         verbose=True
     )
     
     return crew
 
 
-def run_workflow(underperf_threshold=None, max_price_change=None):
+def run_crew_workflow(underperf_threshold=None, max_price_change=None):
     """
-    Run the complete workflow: Trigger -> Pricing -> Marketing -> Labor -> Finance -> Product -> Governance
+    Run the complete workflow using CrewAI framework.
+    This actually executes agents through CrewAI, not direct function calls.
     
     Args:
         underperf_threshold: Override default underperformance threshold
         max_price_change: Override default max price change guardrail
     
     Returns:
-        dict: Results from the workflow
+        CrewOutput: Results from the CrewAI execution
     """
     logger.info("=" * 80)
-    logger.info("STARTING INTELLIGENT MANAGEMENT SYSTEM WORKFLOW")
+    logger.info("STARTING CREWAI INTELLIGENT MANAGEMENT SYSTEM")
+    logger.info("=" * 80)
+    logger.info(f"Underperformance threshold: {underperf_threshold or 'default'}")
+    logger.info(f"Max price change: {max_price_change or 'default'}")
     logger.info("=" * 80)
     
-    results = {}
+    # Create the crew with all agents and tasks
+    crew = create_crew(underperf_threshold, max_price_change)
     
-    try:
-        # Step 1: Run TriggerAgent
-        logger.info("\n[STEP 1/7] Running TriggerAgent...")
-        trigger_result = run_trigger(underperf_threshold)
-        results["trigger"] = trigger_result
-        
-        if trigger_result["status"] != "success":
-            logger.error("TriggerAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "trigger", "error": trigger_result.get("error"), "results": results}
-        
-        # Step 2: Run PricingAgent
-        logger.info("\n[STEP 2/7] Running PricingAgent...")
-        pricing_result = run_pricing(max_price_change)
-        results["pricing"] = pricing_result
-        
-        if pricing_result["status"] != "success":
-            logger.error("PricingAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "pricing", "error": pricing_result.get("error"), "results": results}
-        
-        # Step 3: Run MarketingAgent
-        logger.info("\n[STEP 3/7] Running MarketingAgent...")
-        marketing_result = run_marketing()
-        results["marketing"] = marketing_result
-        
-        if marketing_result["status"] != "success":
-            logger.error("MarketingAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "marketing", "error": marketing_result.get("error"), "results": results}
-        
-        # Step 4: Run LaborAgent
-        logger.info("\n[STEP 4/7] Running LaborAgent...")
-        labor_result = run_labor()
-        results["labor"] = labor_result
-        
-        if labor_result["status"] != "success":
-            logger.error("LaborAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "labor", "error": labor_result.get("error"), "results": results}
-        
-        # Step 5: Run FinanceAgent
-        logger.info("\n[STEP 5/7] Running FinanceAgent...")
-        finance_result = run_finance()
-        results["finance"] = finance_result
-        
-        if finance_result["status"] != "success":
-            logger.error("FinanceAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "finance", "error": finance_result.get("error"), "results": results}
-        
-        # Step 6: Run ProductAgent
-        logger.info("\n[STEP 6/7] Running ProductAgent...")
-        product_result = run_product()
-        results["product"] = product_result
-        
-        if product_result["status"] != "success":
-            logger.error("ProductAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "product", "error": product_result.get("error"), "results": results}
-        
-        # Step 7: Run GovernanceAgent
-        logger.info("\n[STEP 7/7] Running GovernanceAgent...")
-        governance_result = run_governance()
-        results["governance"] = governance_result
-        
-        if governance_result["status"] != "success":
-            logger.error("GovernanceAgent failed. Stopping workflow.")
-            return {"status": "error", "step": "governance", "error": governance_result.get("error"), "results": results}
-        
-        logger.info("\n" + "=" * 80)
-        logger.info("WORKFLOW COMPLETED SUCCESSFULLY")
-        logger.info("=" * 80)
-        
-        return {
-            "status": "success",
-            "results": results
-        }
-        
-    except Exception as e:
-        logger.error(f"Workflow failed with error: {str(e)}", exc_info=True)
-        return {"status": "error", "error": str(e), "results": results}
+    # Kickoff the crew - this runs all agents sequentially through CrewAI
+    logger.info("\n🚀 Kicking off CrewAI workflow...\n")
+    result = crew.kickoff()
+    
+    logger.info("\n" + "=" * 80)
+    logger.info("CREWAI WORKFLOW COMPLETED")
+    logger.info("=" * 80)
+    
+    return result
 
 
 if __name__ == "__main__":
-    # Test the crew
-    result = run_workflow()
-    
-    import json
+    # Run the crew using CrewAI framework
     print("\n" + "=" * 80)
-    print("WORKFLOW SUMMARY")
+    print("TESTING CREWAI WORKFLOW")
     print("=" * 80)
-    print(json.dumps(result, indent=2))
+    
+    result = run_crew_workflow()
+    
+    print("\n" + "=" * 80)
+    print("CREW EXECUTION RESULT")
+    print("=" * 80)
+    print(result)

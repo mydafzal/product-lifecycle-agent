@@ -15,14 +15,37 @@ The system uses **MCP (Model Context Protocol) Servers** as a centralized data a
        │ HTTP Requests
        │
        ▼
-┌─────────────────────────────────────────┐
-│         MCP Servers (FastAPI)           │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ Sales   │ │Inventory │ │  Price   │ │
-│  │ :8001   │ │  :8002   │ │Optimizer │ │
-│  │         │ │          │ │  :8003   │ │
-│  └─────────┘ └──────────┘ └──────────┘ │
-└──────────────┬──────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│         Centralized MCP Server (:8000)               │
+│                                                      │
+│  ┌────────────────────────────────────────────┐    │
+│  │  MCP Framework (Model Context Protocol)    │    │
+│  │  - Tool Registration                       │    │
+│  │  - stdio transport (for MCP clients)       │    │
+│  └────────────────────────────────────────────┘    │
+│                                                      │
+│  ┌────────────────────────────────────────────┐    │
+│  │  HTTP Wrapper (Starlette)                  │    │
+│  │  - POST /tool/{tool_name}                  │    │
+│  │  - GET /tools                              │    │
+│  │  - GET /health                             │    │
+│  └────────────────────────────────────────────┘    │
+│                                                      │
+│  ┌────────────────────────────────────────────┐    │
+│  │  Tool Handlers (tool_handlers.py)          │    │
+│  │  - fetch_sales_data()                      │    │
+│  │  - fetch_inventory_data()                  │    │
+│  │  - fetch_price_optimizer_data()            │    │
+│  │  - fetch_marketing_planner_data()          │    │
+│  │  - fetch_labor_simulator_data()            │    │
+│  └────────────────────────────────────────────┘    │
+│                                                      │
+│  ┌────────────────────────────────────────────┐    │
+│  │  Data Sources (data_sources.py)            │    │
+│  │  - Core CSV reading logic                  │    │
+│  │  - Data filtering and transformation       │    │
+│  └────────────────────────────────────────────┘    │
+└──────────────┬───────────────────────────────────────┘
                │
                │ Read Data
                ▼
@@ -43,10 +66,10 @@ The system uses **MCP (Model Context Protocol) Servers** as a centralized data a
 │   .py       │
 └──────┬──────┘
        │
-       │ HTTP Requests (if USE_MCP_SERVERS=True)
+       │ HTTP POST (if USE_MCP_SERVERS=True)
        │ OR Direct CSV (if USE_MCP_SERVERS=False)
        ▼
-   [Same as above]
+   [MCP Server HTTP endpoint]
 ```
 
 ## Why MCP Servers?
@@ -77,21 +100,32 @@ The system uses **MCP (Model Context Protocol) Servers** as a centralized data a
 
 ## Current Implementation
 
-### MCP Servers
+### Centralized MCP Server
 
-Located in `mcp_servers/`:
+Located in `mcp_servers/` (Port 8000):
 
-1. **`sales_server.py`** (Port 8001)
-   - Endpoint: `POST /get_sales`
-   - Returns: `sku_id, sales, forecast, plan`
+**Files:**
+1. **`server.py`** - Main MCP server with HTTP wrapper
+   - MCP Framework: Tool registration and stdio transport
+   - HTTP Wrapper: Starlette app for HTTP access
+   - Endpoints:
+     - `POST /tool/get_sales` - Get sales data
+     - `POST /tool/get_inventory` - Get inventory data
+     - `POST /tool/price_optimizer` - Get price optimization data
+     - `POST /tool/marketing_planner` - Get marketing data
+     - `POST /tool/labor_simulator` - Get labor data
+     - `GET /tools` - List all available tools
+     - `GET /health` - Health check
 
-2. **`inventory_server.py`** (Port 8002)
-   - Endpoint: `POST /get_inventory`
-   - Returns: `sku_id, inventory, lead_time`
+2. **`tool_handlers.py`** - Tool handler functions
+   - Wrapper functions for each data source
+   - Logging and error handling
+   - Separates tool registration from implementation
 
-3. **`price_optimizer_server.py`** (Port 8003)
-   - Endpoint: `POST /price_optimizer`
-   - Returns: `sku_id, optimal_price, elasticity`
+3. **`data_sources.py`** - Core data access logic
+   - CSV reading and filtering
+   - Data transformation
+   - Standardized response format
 
 ### Data Tools
 
@@ -121,24 +155,27 @@ USE_MCP_SERVERS = False
 python test_workflow.py
 ```
 
-### Mode 2: With MCP Servers (Production)
+### Mode 2: With MCP Server (Production)
 
 **When to use:**
 - Frontend integration needed
 - Multiple services accessing data
 - Need caching, authentication, or advanced features
+- Centralized logging and monitoring
 
 **Setup:**
 
-1. Start MCP servers:
+1. Start MCP server:
 ```bash
-./start_mcp_servers.sh
+./start_mcp_server.sh
+# OR
+python mcp_servers/server.py
 ```
 
-2. Enable MCP mode:
+2. Enable MCP mode (already enabled by default):
 ```python
 # In tools/data_tools.py
-USE_MCP_SERVERS = True
+USE_MCP_SERVERS = True  # Already set to True
 ```
 
 3. Run workflow:
@@ -146,10 +183,12 @@ USE_MCP_SERVERS = True
 python test_workflow.py
 ```
 
-4. Stop servers when done:
+4. Test integration:
 ```bash
-./stop_mcp_servers.sh
+python test_mcp_integration.py
 ```
+
+5. Stop server when done (Ctrl+C in the server terminal)
 
 ## Adding Business Logic to MCP Servers
 
@@ -158,49 +197,76 @@ python test_workflow.py
 When frontend sends threshold parameters, MCP servers can apply filters:
 
 ```python
-# In mcp_servers/sales_server.py
-@app.post("/get_sales")
-async def get_sales(request: Request):
-    body = await request.json()
-    sku_filter = body.get("sku_id")
-    min_sales = body.get("min_sales", 0)  # NEW: threshold from frontend
+# In mcp_servers/data_sources.py
+def get_sales_data(sku_id: Optional[str] = None, min_sales: float = 0) -> Dict[str, Any]:
+    """
+    Retrieve sales data for SKUs.
     
-    df = pd.read_csv(DATA_PATH)
+    Args:
+        sku_id: Optional SKU filter
+        min_sales: Minimum sales threshold (NEW)
     
-    if sku_filter:
-        df = df[df["sku_id"] == sku_filter]
-    
-    # NEW: Apply threshold filter
-    if min_sales > 0:
-        df = df[df["sales"] >= min_sales]
-    
-    return {"data": df.to_json(orient="records"), "status": "success"}
+    Returns:
+        Dict with status and data
+    """
+    try:
+        data_path = DATA_DIR / "get_sales.csv"
+        df = pd.read_csv(data_path)
+        
+        if sku_id:
+            df = df[df["sku_id"] == sku_id]
+        
+        # NEW: Apply threshold filter
+        if min_sales > 0:
+            df = df[df["sales"] >= min_sales]
+        
+        return {
+            "status": "success",
+            "data": json.loads(df.to_json(orient="records"))
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 ```
 
 ### Example: Switch to Database
 
 ```python
-# In mcp_servers/sales_server.py
+# In mcp_servers/data_sources.py
 import psycopg2
+import os
 
-@app.post("/get_sales")
-async def get_sales(request: Request):
-    body = await request.json()
-    
-    # Connect to database instead of CSV
-    conn = psycopg2.connect(DATABASE_URL)
-    query = "SELECT sku_id, sales, forecast, plan FROM sales_data"
-    
-    if body.get("sku_id"):
-        query += f" WHERE sku_id = '{body['sku_id']}'"
-    
-    df = pd.read_sql(query, conn)
-    conn.close()
-    
-    return {"data": df.to_json(orient="records"), "status": "success"}
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/ims_db")
+
+def get_sales_data(sku_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Retrieve sales data from PostgreSQL database.
+    """
+    try:
+        # Connect to database instead of CSV
+        conn = psycopg2.connect(DATABASE_URL)
+        query = "SELECT sku_id, sales, forecast, plan FROM sales_data"
+        
+        if sku_id:
+            query += f" WHERE sku_id = '{sku_id}'"
+        
+        df = pd.read_sql(query, conn)
+        conn.close()
+        
+        return {
+            "status": "success",
+            "data": json.loads(df.to_json(orient="records"))
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 ```
 
-**Agent code doesn't change at all!** ✨
+**Agent code and tool_handlers.py don't change at all!** ✨
 
 ## Frontend Integration
 
@@ -222,45 +288,61 @@ const uploadCSV = async (file) => {
   });
 };
 
-// Fetch results from MCP servers
+// Fetch results from MCP server
 const getSalesData = async () => {
-  const response = await fetch('http://localhost:8001/get_sales', {
+  const response = await fetch('http://localhost:8000/tool/get_sales', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({})
   });
   return response.json();
 };
 ```
 
-## Testing MCP Servers
+## Testing MCP Server
 
-### Test Individual Server
+### Test Server Endpoints
 
 ```bash
 # Start server
-python mcp_servers/sales_server.py
+python mcp_servers/server.py
 
 # In another terminal, test with curl
-curl -X POST http://localhost:8001/get_sales \
+
+# Health check
+curl http://localhost:8000/health
+
+# List all tools
+curl http://localhost:8000/tools
+
+# Test get_sales tool
+curl -X POST http://localhost:8000/tool/get_sales \
   -H "Content-Type: application/json" \
   -d '{"sku_id": "SKU_0001"}'
 
-# Health check
-curl http://localhost:8001/health
+# Test get_inventory tool
+curl -X POST http://localhost:8000/tool/get_inventory \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Test price_optimizer tool
+curl -X POST http://localhost:8000/tool/price_optimizer \
+  -H "Content-Type: application/json" \
+  -d '{"sku_id": "SKU_0002"}'
 ```
 
-### Test All Servers
+### Test Integration with Agents
 
 ```bash
-# Start all servers
-./start_mcp_servers.sh
+# Start MCP server
+./start_mcp_server.sh
 
-# Run workflow with MCP servers enabled
-# (Set USE_MCP_SERVERS=True in data_tools.py first)
+# Run integration test
+python test_mcp_integration.py
+
+# Run workflow with MCP server enabled
+# (USE_MCP_SERVERS=True is already set by default)
 python test_workflow.py
-
-# Stop all servers
-./stop_mcp_servers.sh
 ```
 
 ## Migration Path

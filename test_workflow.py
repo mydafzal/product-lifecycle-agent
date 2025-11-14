@@ -20,7 +20,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent))
 
 import settings
-from crew import run_workflow
+from crew import run_crew_workflow
 
 
 def get_next_test_run_number():
@@ -219,24 +219,40 @@ def main():
     print(f"  - Output: {test_folder}")
     print(f"  - Logs: {settings.LOGS_DIR}")
     
-    # Run the workflow
-    print_separator("RUNNING WORKFLOW", "=")
-    workflow_result = run_workflow(
-        underperf_threshold=args.underperf,
-        max_price_change=args.max_price_change
-    )
+    # Run the CrewAI workflow
+    print_separator("RUNNING CREWAI WORKFLOW", "=")
+    print("\n🚀 Starting CrewAI agents execution...")
+    print("   This will show you how agents work, execute tasks, and use MCP server\n")
     
-    # Display results
-    if not args.no_display and workflow_result.get("status") == "success":
-        display_results()
-    
-    # Save summary report
-    report_path = save_summary_report(workflow_result, test_num)
-    
-    # Final status
-    print_separator("EXECUTION COMPLETE", "=")
-    if workflow_result.get("status") == "success":
-        print("\n✅ Workflow completed successfully!")
+    try:
+        crew_result = run_crew_workflow(
+            underperf_threshold=args.underperf,
+            max_price_change=args.max_price_change
+        )
+        
+        print("\n" + "=" * 80)
+        print("CREWAI EXECUTION COMPLETED")
+        print("=" * 80)
+        print(f"\n{crew_result}")
+        
+        # Display results
+        if not args.no_display:
+            print("\n")
+            display_results()
+        
+        # Create a summary for the report
+        workflow_result = {
+            "status": "success",
+            "crew_output": str(crew_result),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Save summary report
+        report_path = save_summary_report(workflow_result, test_num)
+        
+        # Final status
+        print_separator("EXECUTION COMPLETE", "=")
+        print("\n✅ CrewAI workflow completed successfully!")
         print(f"\n📁 All outputs saved to: {test_folder}")
         print(f"\nGenerated files:")
         print(f"  1. {settings.FLAGGED_SKUS.name} - Underperforming SKUs")
@@ -249,12 +265,21 @@ def main():
         print(f"  8. {settings.FINAL_ACTIONS.name} - Governance decisions")
         print(f"  9. {report_path.name} - Summary report")
         print(f"\n📋 Logs: {settings.APP_LOG}")
+        print(f"\n💡 Review the logs to see how CrewAI agents executed tasks and used MCP server")
         return 0
-    else:
-        print("\n❌ Workflow failed!")
-        print(f"Error at step: {workflow_result.get('step', 'unknown')}")
-        print(f"Error: {workflow_result.get('error', 'Unknown error')}")
+        
+    except Exception as e:
+        print(f"\n❌ CrewAI workflow failed!")
+        print(f"Error: {str(e)}")
         print(f"\n📁 Partial outputs saved to: {test_folder}")
+        
+        # Save error report
+        workflow_result = {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+        save_summary_report(workflow_result, test_num)
         return 1
 
 

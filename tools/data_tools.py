@@ -12,7 +12,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Flag to switch between MCP servers and direct CSV access
-USE_MCP_SERVERS = False  # Set to True when MCP servers are running
+# MCP server provides centralized data access with logging and future scalability
+USE_MCP_SERVERS = True  # Set to False to bypass MCP and use direct CSV access
 
 def get_sales_data(sku_id=None):
     """
@@ -26,20 +27,24 @@ def get_sales_data(sku_id=None):
     """
     if USE_MCP_SERVERS:
         try:
+            params = {"sku_id": sku_id} if sku_id else {}
             response = requests.post(
-                f"{settings.SALES_SERVER_URL}/get_sales",
-                json={"sku_id": sku_id} if sku_id else {},
+                f"{settings.MCP_SERVER_URL}/invoke",
+                json={"tool": "get_sales", "params": params},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
-            if data.get("status") == "success":
-                return pd.DataFrame(data["data"])
-            else:
+            if data.get("result") and data["result"].get("status") == "success":
+                return pd.DataFrame(data["result"]["data"])
+            elif data.get("error"):
                 logger.error(f"MCP server error: {data.get('error')}")
                 raise Exception(data.get("error", "Unknown error"))
+            else:
+                logger.error(f"Unexpected response: {data}")
+                raise Exception("Unexpected response from MCP server")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to sales MCP server: {e}")
+            logger.error(f"Failed to connect to MCP server: {e}")
             logger.info("Falling back to direct CSV access")
             # Fallback to CSV
             df = pd.read_csv(settings.SALES_INPUT)
@@ -65,20 +70,24 @@ def get_inventory_data(sku_id=None):
     """
     if USE_MCP_SERVERS:
         try:
+            params = {"sku_id": sku_id} if sku_id else {}
             response = requests.post(
-                f"{settings.INVENTORY_SERVER_URL}/get_inventory",
-                json={"sku_id": sku_id} if sku_id else {},
+                f"{settings.MCP_SERVER_URL}/invoke",
+                json={"tool": "get_inventory", "params": params},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
-            if data.get("status") == "success":
-                return pd.DataFrame(data["data"])
-            else:
+            if data.get("result") and data["result"].get("status") == "success":
+                return pd.DataFrame(data["result"]["data"])
+            elif data.get("error"):
                 logger.error(f"MCP server error: {data.get('error')}")
                 raise Exception(data.get("error", "Unknown error"))
+            else:
+                logger.error(f"Unexpected response: {data}")
+                raise Exception("Unexpected response from MCP server")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to inventory MCP server: {e}")
+            logger.error(f"Failed to connect to MCP server: {e}")
             logger.info("Falling back to direct CSV access")
             # Fallback to CSV
             df = pd.read_csv(settings.INVENTORY_INPUT)
@@ -104,20 +113,24 @@ def get_price_optimizer_data(sku_id=None):
     """
     if USE_MCP_SERVERS:
         try:
+            params = {"sku_id": sku_id} if sku_id else {}
             response = requests.post(
-                f"{settings.PRICE_OPTIMIZER_SERVER_URL}/price_optimizer",
-                json={"sku_id": sku_id} if sku_id else {},
+                f"{settings.MCP_SERVER_URL}/invoke",
+                json={"tool": "price_optimizer", "params": params},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
-            if data.get("status") == "success":
-                return pd.DataFrame(data["data"])
-            else:
+            if data.get("result") and data["result"].get("status") == "success":
+                return pd.DataFrame(data["result"]["data"])
+            elif data.get("error"):
                 logger.error(f"MCP server error: {data.get('error')}")
                 raise Exception(data.get("error", "Unknown error"))
+            else:
+                logger.error(f"Unexpected response: {data}")
+                raise Exception("Unexpected response from MCP server")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to price optimizer MCP server: {e}")
+            logger.error(f"Failed to connect to MCP server: {e}")
             logger.info("Falling back to direct CSV access")
             # Fallback to CSV
             df = pd.read_csv(settings.PRICE_OPTIMIZER_INPUT)
@@ -165,20 +178,24 @@ def get_marketing_planner_data(sku_id=None):
     """
     if USE_MCP_SERVERS:
         try:
+            params = {"sku_id": sku_id} if sku_id else {}
             response = requests.post(
-                f"{settings.MARKETING_PLANNER_SERVER_URL}/marketing_planner",
-                json={"sku_id": sku_id} if sku_id else {},
+                f"{settings.MCP_SERVER_URL}/invoke",
+                json={"tool": "marketing_planner", "params": params},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
-            if data.get("status") == "success":
-                return pd.DataFrame(data["data"])
-            else:
+            if data.get("result") and data["result"].get("status") == "success":
+                return pd.DataFrame(data["result"]["data"])
+            elif data.get("error"):
                 logger.error(f"MCP server error: {data.get('error')}")
                 raise Exception(data.get("error", "Unknown error"))
+            else:
+                logger.error(f"Unexpected response: {data}")
+                raise Exception("Unexpected response from MCP server")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to marketing planner MCP server: {e}")
+            logger.error(f"Failed to connect to MCP server: {e}")
             logger.info("Falling back to direct CSV access")
             df = pd.read_csv(settings.MARKETING_PLANNER_INPUT)
             if sku_id:
@@ -203,20 +220,24 @@ def get_labor_simulator_data(sku_id=None):
     """
     if USE_MCP_SERVERS:
         try:
+            params = {"sku_id": sku_id} if sku_id else {}
             response = requests.post(
-                f"{settings.LABOR_SIMULATOR_SERVER_URL}/labor_simulator",
-                json={"sku_id": sku_id} if sku_id else {},
+                f"{settings.MCP_SERVER_URL}/invoke",
+                json={"tool": "labor_simulator", "params": params},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
-            if data.get("status") == "success":
-                return pd.DataFrame(data["data"])
-            else:
+            if data.get("result") and data["result"].get("status") == "success":
+                return pd.DataFrame(data["result"]["data"])
+            elif data.get("error"):
                 logger.error(f"MCP server error: {data.get('error')}")
                 raise Exception(data.get("error", "Unknown error"))
+            else:
+                logger.error(f"Unexpected response: {data}")
+                raise Exception("Unexpected response from MCP server")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to labor simulator MCP server: {e}")
+            logger.error(f"Failed to connect to MCP server: {e}")
             logger.info("Falling back to direct CSV access")
             df = pd.read_csv(settings.LABOR_SIMULATOR_INPUT)
             if sku_id:
