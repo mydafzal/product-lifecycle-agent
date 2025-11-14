@@ -1,68 +1,58 @@
-from fastmcp import MCPServer, MCPTool, MCPRequest, MCPResponse
 import logging
-from data_functions import (
+from starlette.applications import Starlette
+from starlette.routing import Mount
+
+# Official MCP SDK import (not the third-party 'fastmcp' module)
+from mcp.server.fastmcp import FastMCP
+
+# Your CSV-backed functions
+from .data_functions import (
     get_sales,
     get_inventory,
     price_optimizer,
     marketing_planner,
-    labor_simulator
+    labor_simulator,
 )
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("DataSourcesServer")
 
-server = MCPServer(name="DataSourcesServer")
+# Create the MCP server; configure Streamable HTTP path as /mcp
+mcp = FastMCP(name="DataSourcesServer", streamable_http_path="/mcp")
 
-# Register tools
-server.register_tool(MCPTool(
-    name="get_sales",
-    description="Fetches sales data",
-    handler=get_sales
-))
+# === Register tools by decorating simple wrappers around your functions ===
 
-server.register_tool(MCPTool(
-    name="get_inventory",
-    description="Fetches inventory data",
-    handler=get_inventory
-))
+@mcp.tool()
+def get_sales_tool(sku_id: str | None = None) -> dict:
+    """Fetch sales data from CSV (optionally filter by sku_id)."""
+    return get_sales(sku_id=sku_id)
 
-server.register_tool(MCPTool(
-    name="price_optimizer",
-    description="Fetches price optimizer data",
-    handler=price_optimizer
-))
+@mcp.tool()
+def get_inventory_tool(sku_id: str | None = None) -> dict:
+    """Fetch inventory data from CSV (optionally filter by sku_id)."""
+    return get_inventory(sku_id=sku_id)
 
-server.register_tool(MCPTool(
-    name="marketing_planner",
-    description="Fetches marketing planner data",
-    handler=marketing_planner
-))
+@mcp.tool()
+def price_optimizer_tool(sku_id: str | None = None) -> dict:
+    """Fetch price optimizer data from CSV (optionally filter by sku_id)."""
+    return price_optimizer(sku_id=sku_id)
 
-server.register_tool(MCPTool(
-    name="labor_simulator",
-    description="Fetches labor simulator data",
-    handler=labor_simulator
-))
+@mcp.tool()
+def marketing_planner_tool(sku_id: str | None = None) -> dict:
+    """Fetch marketing planner data from CSV (optionally filter by sku_id)."""
+    return marketing_planner(sku_id=sku_id)
 
-logger.info("Registered MCP tools...")
+@mcp.tool()
+def labor_simulator_tool(sku_id: str | None = None) -> dict:
+    """Fetch labor simulator data from CSV (optionally filter by sku_id)."""
+    return labor_simulator(sku_id=sku_id)
 
+logger.info("✅ Registered MCP tools")
 
-@server.route("/invoke", methods=["POST"])
-def invoke(request: MCPRequest):
-    tool_name = request.tool
-    params = request.params or {}
-
-    if tool_name not in server.tools:
-        return MCPResponse(error=f"Unknown tool: {tool_name}")
-
-    try:
-        tool = server.tools[tool_name]
-        result = tool.handler(params)
-        return MCPResponse(result=result)
-    except Exception as e:
-        return MCPResponse(error=str(e))
-
+# Expose the MCP server over Streamable HTTP at /mcp
+app = Starlette(routes=[Mount("/", app=mcp.streamable_http_app())])
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting MCP Data Sources Server at http://localhost:8000")
-    server.run("0.0.0.0", 8000)
+    logger.info("🚀 Starting MCP DataSourcesServer at http://localhost:8000/mcp")
+    import uvicorn
+    uvicorn.run("mcp_servers.server:app", host="0.0.0.0", port=8000, reload=False)

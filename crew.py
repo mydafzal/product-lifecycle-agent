@@ -11,6 +11,11 @@ from agents.finance_agent import run_finance
 from agents.product_agent import run_product
 from agents.governance_agent import run_governance
 import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

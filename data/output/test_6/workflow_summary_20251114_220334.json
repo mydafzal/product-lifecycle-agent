@@ -1,0 +1,21 @@
+{
+  "test_run": 6,
+  "execution_time": "2025-11-14T22:03:34.582288",
+  "status": "error",
+  "workflow_result": {
+    "status": "error",
+    "error": "1 validation error for Agent\n  Value error, Model must be a non-empty string [type=value_error, input_value={'role': 'Trigger Agent',...ock id='2063333713776'>}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/value_error",
+    "timestamp": "2025-11-14T22:03:34.582288"
+  },
+  "output_folder": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6",
+  "output_files": {
+    "flagged_skus": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\flagged_skus.csv",
+    "choice_sets": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\choice_sets.json",
+    "price_scenarios": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\price_scenarios.csv",
+    "campaign_scenarios": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\campaign_scenarios.csv",
+    "labor_estimates": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\labor_cost_estimates.csv",
+    "ranked_plan": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\ranked_action_plan.csv",
+    "product_feedback": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\product_feedback.csv",
+    "final_actions": "C:\\Rayyan Folder\\SE AI Job\\Misc\\Marketing_Life_Item_Agent\\data\\output\\test_6\\finalized_actions.csv"
+  }
+}

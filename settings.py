@@ -44,7 +44,7 @@ AUDIT_LOG = LOGS_DIR / "audit_log.csv"
 APP_LOG = LOGS_DIR / "app.log"
 
 # MCP Server URL (centralized server with registered tools)
-MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:8000/mcp")
 
 # Legacy URLs (deprecated - kept for reference)
 # SALES_SERVER_URL = os.getenv("SALES_SERVER_URL", "http://localhost:8001")

@@ -764,3 +764,153 @@ ims/
 * Keep **OFF** for: Trigger, Labor, Finance, and Pricing (unless you want rationales).
 
 If you like, I can now generate the stub files (folders + empty functions) exactly following this split so you can start coding immediately.
+
+
+
+------------------------------------------------------------------------------------------------
+LLM CREW Must
+---------------------------------------------------------------------------------------------------
+
+You’re seeing the `OPENAI_API_KEY is required` error because **CrewAI always tries to spin up an LLM for each Agent at init time**—even if your task logic is 100% deterministic (callbacks only). It’s how CrewAI is designed: “agents” are LLM-driven by default; role/goal/backstory + task description become part of a prompt. If no provider is configured, it complains about a missing key. ([docs.crewai.com][1])
+
+Good news: you can still run your deterministic pipeline. Here’s the simplest way to think about it and fix it.
+
+---
+
+# What CrewAI uses the LLM for (plain English)
+
+* **Agent fields**
+
+  * **role / goal / backstory** → context text the LLM reads to “think like that agent.” ([docs.crewai.com][2])
+* **Task fields**
+
+  * **description / expected_output / tools / context** → instructions and constraints the LLM uses to produce an answer or decide tool calls. ([docs.crewai.com][3])
+  * **callback** → your Python function that runs **after** the task completes (often after an LLM step) and gets the TaskOutput. It’s great for deterministic post-processing, file writes, etc. ([GitHub][4])
+
+In your code you’re using callbacks (e.g., `run_trigger`) to do the real work. That can make the LLM step unnecessary—but **the library still tries to initialize an LLM object** by default, which is why your logs show the API key error. ([CrewAI][5])
+
+---
+
+# Two practical ways to run “deterministic agents”
+
+## Option 1 — Keep CrewAI, but point it at a cheap/local provider (or a dummy key)
+
+* If you’re not actually calling the LLM (because your tasks run via callbacks), you just need to **satisfy the init requirement**.
+
+### Easiest quick fix
+
+Set a dummy OpenAI key so the import-time check passes:
+
+```bash
+# .env or shell
+OPENAI_API_KEY=dummy
+```
+
+This silences the “missing key” error in many setups. If you *accidentally* trigger a real LLM call, you’ll get a 401 later—so only do this if you truly don’t call the LLM. (Community tip.) ([CrewAI][5])
+
+### Cleaner fix: give each Agent an explicit non-OpenAI LLM
+
+If you have **Ollama** locally, tell CrewAI to use it:
+
+```python
+from crewai import LLM, Agent
+
+local_llm = LLM(
+    model="ollama/llama3.1",      # provider/model id
+    base_url="http://localhost:11434",  # Ollama endpoint
+    api_key="dummy",              # not used by Ollama, but satisfies checks
+    temperature=0
+)
+
+def create_trigger_agent():
+    return Agent(
+        role="Trigger Agent",
+        goal="Detect underperforming SKUs and flag them for action",
+        backstory="You analyze sales vs forecast.",
+        verbose=True,
+        allow_delegation=False,
+        llm=local_llm,            # 👈 prevents default OpenAI lookup
+    )
+```
+
+CrewAI’s `LLM` class is meant for this: you pass provider/model config directly to agents instead of using the default. ([GitHub][6])
+
+> If you *do* want an LLM sometimes (e.g., natural-language summaries later), this option is ideal: keep the agents intact and you can turn LLM use on per task as needed.
+
+---
+
+## Option 2 — Skip CrewAI for these steps (pure Python pipeline)
+
+If none of your seven steps needs reasoning, you can run your `run_trigger → run_pricing → …` functions **directly** in a Python script (or an orchestrator like Prefect/Airflow). Then re-introduce CrewAI only where you want LLM reasoning. (CrewAI community also notes agents are built around LLMs; if you truly want no LLM at all, a plain Python class loop is simpler.) ([CrewAI][7])
+
+---
+
+# What happens during `crew.kickoff()` (two modes)
+
+**A) Typical (LLM) mode**
+
+1. Crew builds a prompt from Agent (role/goal/backstory) + Task (description/expected_output/tools/context).
+2. Sends to the configured LLM; the model may select tools, reason, and produce an answer.
+3. Task `callback(output)` fires with the TaskOutput so you can save files, trigger side effects, etc. ([DeepWiki][8])
+
+**B) Your “deterministic callback” style**
+
+* You still create Agents/Tasks, but for each Task you rely on the **callback** to do the work (read CSVs, compute, write files).
+* To avoid the crash during agent init, you must provide **some** LLM config (dummy/local/real). Even if it’s never called, the object must exist. ([CrewAI][5])
+
+---
+
+# What each of *your* agents is doing right now
+
+Given your code:
+
+* **Trigger Agent / Task** → `run_trigger(threshold)`
+  Reads sales, computes `gap_pct`, filters underperformers, writes `flagged_skus.csv` and `choice_sets.json`. (All deterministic.)
+
+* **Pricing / Marketing / Labor / Finance / Product / Governance Agents**
+  Each Task calls your deterministic function (`run_pricing`, `run_marketing`, `run_labor`, `run_finance`, `run_product`, `run_governance`) via the Task’s **callback**. That means the “work” is Python, not the LLM. (Just be sure each function exists and writes/returns what your pipeline expects.)
+
+So: **the LLM isn’t doing the heavy lifting** in your pipeline today. It’s only being *initialized* because CrewAI agents are LLM-based objects.
+
+---
+
+# Minimal changes that will unblock you (copy/paste)
+
+1. Pick one of these:
+
+   * **Set a dummy key** (works if you never call an LLM):
+
+     ```bash
+     setx OPENAI_API_KEY dummy  # Windows PowerShell
+     ```
+
+     or put `OPENAI_API_KEY=dummy` in `.env`. ([CrewAI][5])
+   * **Or** pass a real/alternative LLM to each agent (example with CrewAI `LLM` shown above). ([GitHub][6])
+
+2. Keep your Tasks exactly as you wrote them—each uses `callback=lambda _: run_xxx()` so the pipeline stays deterministic.
+
+---
+
+## Quick FAQ
+
+**Q: Why do I need an LLM if my agents don’t use it?**
+A: Because CrewAI’s **Agent** class is designed around LLMs. The framework wires agents → prompts → tool use. Even if your work is in callbacks, the Agent object still gets created and expects an LLM provider. (You can stub it.) ([docs.crewai.com][1])
+
+**Q: Do role/goal/backstory matter if I don’t use the LLM?**
+A: Not really—they’re only used to build prompts for the LLM. With callback-only tasks, they’re just metadata. ([docs.crewai.com][2])
+
+**Q: Can a task run *only* the callback and skip the LLM step?**
+A: In practice, yes—by supplying a no-op/unused LLM so init passes and doing all the work in the callback (like you’re doing). Some folks also run plain Python orchestration for truly LLM-free flows. ([GitHub][4])
+
+---
+
+If you want, I can tweak your `create_*_agent()` functions to inject a local/dummy LLM now, or show a tiny “no-Crew” runner that calls your seven functions in sequence (same outputs), then add an LLM only where you later need summarization or reasoning.
+
+[1]: https://docs.crewai.com/en/concepts/llms?utm_source=chatgpt.com "LLMs - CrewAI"
+[2]: https://docs.crewai.com/en/concepts/agents?utm_source=chatgpt.com "Agents - CrewAI"
+[3]: https://docs.crewai.com/en/concepts/tasks?utm_source=chatgpt.com "Tasks - CrewAI"
+[4]: https://github.com/crewAIInc/crewAI/issues/496?utm_source=chatgpt.com "Task callbacks do not execute · Issue #496 · crewAIInc/crewAI - GitHub"
+[5]: https://community.crewai.com/t/why-crewai-always-ask-openai-api-key/4698?utm_source=chatgpt.com "Why Crewai always ask OPENAI_API_KEY"
+[6]: https://github.com/crewAIInc/crewAI/issues/2895?utm_source=chatgpt.com "[BUG] Gemini LLM Tool Calling Fails: `tools` parameter is ... - GitHub"
+[7]: https://community.crewai.com/t/can-we-create-agentic-framework-with-crewai-without-using-llm/3778?utm_source=chatgpt.com "Can we create agentic framework with crewai without using LLM"
+[8]: https://deepwiki.com/crewAIInc/crewAI/6.2-custom-llm-configuration?utm_source=chatgpt.com "Advanced LLM Features | crewAIInc/crewAI | DeepWiki"
