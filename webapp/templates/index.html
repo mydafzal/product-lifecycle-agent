@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>Intelligent Management System</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#upload" class="nav-link active">
+                    <i class="fas fa-upload"></i> Upload Data
+                </a>
+                <a href="#workflow" class="nav-link">
+                    <i class="fas fa-play-circle"></i> Run Workflow
+                </a>
+                <a href="#results" class="nav-link">
+                    <i class="fas fa-file-alt"></i> Results
+                </a>
+                <a href="#logs" class="nav-link">
+                    <i class="fas fa-terminal"></i> Logs
+                </a>
+                <a href="#diagram" class="nav-link">
+                    <i class="fas fa-project-diagram"></i> Workflow
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Upload Section -->
+        <section id="upload" class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Upload CSV Files</h2>
+                <p>Upload all required CSV files to run the workflow</p>
+            </div>
+
+            <div class="upload-container">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-grid">
+                        <!-- Sales File -->
+                        <div class="file-upload-box">
+                            <label for="sales-file" class="file-label">
+                                <i class="fas fa-chart-bar"></i>
+                                <span class="file-name">Sales Data</span>
+                                <span class="file-required">get_sales.csv</span>
+                            </label>
+                            <input type="file" id="sales-file" name="sales" accept=".csv" required>
+                            <div class="file-status" id="sales-status">
+                                <i class="fas fa-clock"></i> Waiting...
+                            </div>
+                        </div>
+
+                        <!-- Inventory File -->
+                        <div class="file-upload-box">
+                            <label for="inventory-file" class="file-label">
+                                <i class="fas fa-boxes"></i>
+                                <span class="file-name">Inventory Data</span>
+                                <span class="file-required">get_inventory.csv</span>
+                            </label>
+                            <input type="file" id="inventory-file" name="inventory" accept=".csv" required>
+                            <div class="file-status" id="inventory-status">
+                                <i class="fas fa-clock"></i> Waiting...
+                            </div>
+                        </div>
+
+                        <!-- Price Optimizer File -->
+                        <div class="file-upload-box">
+                            <label for="price-file" class="file-label">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span class="file-name">Price Optimizer</span>
+                                <span class="file-required">price_optimizer.csv</span>
+                            </label>
+                            <input type="file" id="price-file" name="price_optimizer" accept=".csv" required>
+                            <div class="file-status" id="price_optimizer-status">
+                                <i class="fas fa-clock"></i> Waiting...
+                            </div>
+                        </div>
+
+                        <!-- Marketing Planner File -->
+                        <div class="file-upload-box">
+                            <label for="marketing-file" class="file-label">
+                                <i class="fas fa-bullhorn"></i>
+                                <span class="file-name">Marketing Planner</span>
+                                <span class="file-required">marketing_planner.csv</span>
+                            </label>
+                            <input type="file" id="marketing-file" name="marketing_planner" accept=".csv" required>
+                            <div class="file-status" id="marketing_planner-status">
+                                <i class="fas fa-clock"></i> Waiting...
+                            </div>
+                        </div>
+
+                        <!-- Labor Simulator File -->
+                        <div class="file-upload-box">
+                            <label for="labor-file" class="file-label">
+                                <i class="fas fa-users"></i>
+                                <span class="file-name">Labor Simulator</span>
+                                <span class="file-required">labor_simulator.csv</span>
+                            </label>
+                            <input type="file" id="labor-file" name="labor_simulator" accept=".csv" required>
+                            <div class="file-status" id="labor_simulator-status">
+                                <i class="fas fa-clock"></i> Waiting...
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large" id="uploadBtn">
+                        <i class="fas fa-upload"></i> Upload All Files
+                    </button>
+                </form>
+
+                <!-- Upload Status Alert -->
+                <div id="uploadAlert" class="alert" style="display: none;"></div>
+            </div>
+        </section>
+
+        <!-- Workflow Configuration Section -->
+        <section id="workflow" class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-cog"></i> Workflow Configuration</h2>
+                <p>Configure thresholds and run the agent workflow</p>
+            </div>
+
+            <div class="config-container">
+                <div class="config-grid">
+                    <div class="config-box">
+                        <label for="underperf-threshold">
+                            <i class="fas fa-percentage"></i> Underperformance Threshold
+                        </label>
+                        <input 
+                            type="number" 
+                            id="underperf-threshold" 
+                            placeholder="0.10 (10%)" 
+                            step="0.01" 
+                            min="0.01" 
+                            max="0.99"
+                            class="input-field"
+                        >
+                        <small>Default: 0.10 (10%) - SKUs below forecast by this %</small>
+                    </div>
+
+                    <div class="config-box">
+                        <label for="max-price-change">
+                            <i class="fas fa-tag"></i> Max Price Change
+                        </label>
+                        <input 
+                            type="number" 
+                            id="max-price-change" 
+                            placeholder="0.20 (20%)" 
+                            step="0.01" 
+                            min="0.01" 
+                            max="0.99"
+                            class="input-field"
+                        >
+                        <small>Default: 0.20 (20%) - Maximum allowed price change</small>
+                    </div>
+                </div>
+
+                <button id="runWorkflowBtn" class="btn btn-success btn-large" disabled>
+                    <i class="fas fa-play"></i> Run Workflow
+                </button>
+
+                <!-- Workflow Status Alert -->
+                <div id="workflowAlert" class="alert" style="display: none;"></div>
+            </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section id="logs" class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-terminal"></i> Workflow Logs</h2>
+                <p>Real-time execution logs from the agent workflow</p>
+                <button id="clearLogsBtn" class="btn btn-secondary btn-small">
+                    <i class="fas fa-trash"></i> Clear Logs
+                </button>
+            </div>
+
+            <div class="logs-container">
+                <div id="logsContent" class="logs-content">
+                    <div class="logs-empty">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No logs yet. Upload files and run the workflow to see logs here.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-file-download"></i> Output Files</h2>
+                <p>Download and preview generated output files</p>
+                <button id="refreshFilesBtn" class="btn btn-secondary btn-small">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+
+            <div class="results-container">
+                <div id="filesContent" class="files-content">
+                    <div class="files-empty">
+                        <i class="fas fa-folder-open"></i>
+                        <p>No output files yet. Run the workflow to generate results.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Diagram Section -->
+        <section id="diagram" class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-project-diagram"></i> Agent Workflow Diagram</h2>
+                <p>Interactive visualization of the agent workflow with data flow</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="zoomInBtn" class="btn btn-secondary btn-small">
+                        <i class="fas fa-search-plus"></i> Zoom In
+                    </button>
+                    <button id="zoomOutBtn" class="btn btn-secondary btn-small">
+                        <i class="fas fa-search-minus"></i> Zoom Out
+                    </button>
+                    <button id="resetZoomBtn" class="btn btn-secondary btn-small">
+                        <i class="fas fa-compress"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="diagram-container">
+                <canvas id="workflowCanvas"></canvas>
+                <div class="diagram-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4F46E5;"></div>
+                        <span>Input Data</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10B981;"></div>
+                        <span>Agent</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #F59E0B;"></div>
+                        <span>Output Data</span>
+                    </div>
+                </div>
+                <div class="diagram-help">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Double-click any node to view its data</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="previewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="previewTitle">File Preview</h3>
+                <button class="modal-close" id="closePreviewBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/workflow-diagram.js') }}"></script>
+</body>
+</html>

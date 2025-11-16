@@ -1,0 +1,64 @@
+{
+  "auto_approved": [
+    {
+      "sku_id": "SKU_0006",
+      "rank": 2,
+      "roi": 2417.9190000000044,
+      "reason": "All guardrails satisfied"
+    }
+  ],
+  "manual_review": [
+    {
+      "sku_id": "SKU_0007",
+      "rank": 1,
+      "roi": 3759.057842105265,
+      "reason": "Product review needed: Inventory may not cover expected lift | Long lead time (18 days)"
+    },
+    {
+      "sku_id": "SKU_0015",
+      "rank": 3,
+      "roi": 2087.3036894736897,
+      "reason": "Labor cost ($248.32) exceeds $200.0 cap"
+    },
+    {
+      "sku_id": "SKU_0012",
+      "rank": 4,
+      "roi": 2042.270894736844,
+      "reason": "Labor cost ($314.30) exceeds $200.0 cap"
+    },
+    {
+      "sku_id": "SKU_0005",
+      "rank": 5,
+      "roi": 1903.2340526315816,
+      "reason": "Labor cost ($265.18) exceeds $200.0 cap"
+    },
+    {
+      "sku_id": "SKU_0001",
+      "rank": 6,
+      "roi": 1677.2280105263171,
+      "reason": "Product review needed: Long lead time (19 days)"
+    }
+  ],
+  "rejected": [
+    {
+      "sku_id": "SKU_0008",
+      "rank": 7,
+      "roi": -809.2569473684216,
+      "reason": "Negative ROI ($-809.26)"
+    },
+    {
+      "sku_id": "SKU_0010",
+      "rank": 8,
+      "roi": -1191.6316210526293,
+      "reason": "Negative ROI ($-1,191.63)"
+    },
+    {
+      "sku_id": "SKU_0011",
+      "rank": 9,
+      "roi": -1559.716905263157,
+      "reason": "Negative ROI ($-1,559.72)"
+    }
+  ],
+  "timestamp": "2025-11-16T14:48:12.035316",
+  "total_count": 9
+}

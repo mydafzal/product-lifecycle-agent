@@ -7,14 +7,21 @@ echo "🚀 Starting IMS MCP Server..."
 echo "📍 Server will be available at: http://localhost:8000"
 echo ""
 
-cd "$(dirname "$0")/mcp_servers"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/mcp_servers"
 
-# Check if uvicorn is installed
-if ! command -v uvicorn &> /dev/null; then
-    echo "❌ Error: uvicorn is not installed"
-    echo "Please install it with: pip install uvicorn"
+# Check if Python is available
+if ! command -v python &> /dev/null; then
+    echo "❌ Error: python is not installed or not in PATH"
     exit 1
 fi
 
-# Start the server
+# Check if server.py exists
+if [ ! -f "server.py" ]; then
+    echo "❌ Error: server.py not found in mcp_servers directory"
+    exit 1
+fi
+
+echo "Starting MCP server..."
 python server.py

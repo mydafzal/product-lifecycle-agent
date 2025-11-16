@@ -1,0 +1,17 @@
+{
+  "report_generated": "2025-11-16T14:50:20.954982",
+  "total_skus_flagged": 9,
+  "by_final_decision": {
+    "manual-review": 5,
+    "rejected": 3,
+    "auto-approved": 1
+  },
+  "by_product_risk": {
+    "medium": 4,
+    "high": 3,
+    "low": 2
+  },
+  "total_roi": 10326.408015789493,
+  "total_marketing_spend": 23160.86,
+  "total_labor_cost": 1550.425
+}

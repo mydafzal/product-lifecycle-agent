@@ -10,6 +10,7 @@ from agents.labor_agent import run_labor
 from agents.finance_agent import run_finance
 from agents.product_agent import run_product
 from agents.governance_agent import run_governance
+from agents.report_agent import run_report
 import logging
 import os
 from dotenv import load_dotenv
@@ -115,6 +116,20 @@ def create_governance_agent():
         backstory=(
             "You are a governance officer who ensures all actions comply "
             "with business rules and makes final approval decisions."
+        ),
+        verbose=True,
+        allow_delegation=False
+    )
+
+
+def create_report_agent():
+    """Create ReportAgent with CrewAI"""
+    return Agent(
+        role="Report Agent",
+        goal="Generate comprehensive transparency report for human review",
+        backstory=(
+            "You are a reporting specialist who creates detailed transparency "
+            "reports showing the complete journey of each SKU through the workflow."
         ),
         verbose=True,
         allow_delegation=False
@@ -242,9 +257,26 @@ def create_governance_task(agent):
     )
 
 
+def create_report_task(agent):
+    """Create task for ReportAgent"""
+    return Task(
+        description=(
+            "Generate comprehensive transparency report showing the journey of each SKU. "
+            "Include all workflow stages: trigger, pricing, marketing, labor, finance, product, governance. "
+            "Provide clear visibility for human review and decision-making."
+        ),
+        agent=agent,
+        expected_output=(
+            "A CSV transparency report with complete SKU journey, "
+            "plus a JSON summary with key metrics."
+        ),
+        callback=lambda _: run_report()
+    )
+
+
 def create_crew(underperf_threshold=None, max_price_change=None):
     """
-    Create and configure the CrewAI crew with all 7 agents and tasks.
+    Create and configure the CrewAI crew with all 8 agents and tasks.
     
     Args:
         underperf_threshold: Override default underperformance threshold
@@ -253,7 +285,75 @@ def create_crew(underperf_threshold=None, max_price_change=None):
     Returns:
         Crew: Configured CrewAI crew with complete workflow
     """
-    # Create all 7 agents
+    # Create all 8 agents
+    trigger_agent = create_trigger_agent()
+    pricing_agent = create_pricing_agent()
+    marketing_agent = create_marketing_agent()
+    labor_agent = create_labor_agent()
+    finance_agent = create_finance_agent()
+    product_agent = create_product_agent()
+    governance_agent = create_governance_agent()
+    report_agent = create_report_agent()
+    
+    # Create all 8 tasks
+    trigger_task = create_trigger_task(trigger_agent, underperf_threshold)
+    pricing_task = create_pricing_task(pricing_agent, max_price_change)
+    marketing_task = create_marketing_task(marketing_agent)
+    labor_task = create_labor_task(labor_agent)
+    finance_task = create_finance_task(finance_agent)
+    product_task = create_product_task(product_agent)
+    governance_task = create_governance_task(governance_agent)
+    report_task = create_report_task(report_agent)
+    
+    # Create crew with sequential process (all 8 agents in workflow order)
+    crew = Crew(
+        agents=[
+            trigger_agent,
+            pricing_agent,
+            marketing_agent,
+            labor_agent,
+            finance_agent,
+            product_agent,
+            governance_agent,
+            report_agent
+        ],
+        tasks=[
+            trigger_task,
+            pricing_task,
+            marketing_task,
+            labor_task,
+            finance_task,
+            product_task,
+            governance_task,
+            report_task
+        ],
+        process=Process.sequential,  # Run tasks in order: Trigger -> Pricing -> Marketing -> Labor -> Finance -> Product -> Governance -> Report
+        verbose=True
+    )
+    
+    return crew
+
+
+def run_crew_workflow(underperf_threshold=None, max_price_change=None):
+    """
+    Run the workflow up to governance (excluding report).
+    Report will be generated separately after user approval.
+    
+    Args:
+        underperf_threshold: Override default underperformance threshold
+        max_price_change: Override default max price change guardrail
+    
+    Returns:
+        CrewOutput: Results from the CrewAI execution
+    """
+    logger.info("=" * 80)
+    logger.info("STARTING CREWAI INTELLIGENT MANAGEMENT SYSTEM")
+    logger.info("=" * 80)
+    logger.info(f"Underperformance threshold: {underperf_threshold or 'default'}")
+    logger.info(f"Max price change: {max_price_change or 'default'}")
+    logger.info("=" * 80)
+    
+    # Create agents
     trigger_agent = create_trigger_agent()
     pricing_agent = create_pricing_agent()
     marketing_agent = create_marketing_agent()
@@ -262,8 +362,8 @@ def create_crew(underperf_threshold=None, max_price_change=None):
     product_agent = create_product_agent()
     governance_agent = create_governance_agent()
     
-    # Create all 7 tasks
-    trigger_task = create_trigger_task(trigger_agent, underperf_threshold)
+    # Create tasks (excluding report)
+    trigger_task = create_trigger_task(trigger_agent)
     pricing_task = create_pricing_task(pricing_agent, max_price_change)
     marketing_task = create_marketing_task(marketing_agent)
     labor_task = create_labor_task(labor_agent)
@@ -271,7 +371,7 @@ def create_crew(underperf_threshold=None, max_price_change=None):
     product_task = create_product_task(product_agent)
     governance_task = create_governance_task(governance_agent)
     
-    # Create crew with sequential process (all 7 agents in workflow order)
+    # Create crew WITHOUT report task
     crew = Crew(
         agents=[
             trigger_agent,
@@ -291,41 +391,36 @@ def create_crew(underperf_threshold=None, max_price_change=None):
             product_task,
             governance_task
         ],
-        process=Process.sequential,  # Run tasks in order: Trigger -> Pricing -> Marketing -> Labor -> Finance -> Product -> Governance
+        process=Process.sequential,
         verbose=True
     )
     
-    return crew
-
-
-def run_crew_workflow(underperf_threshold=None, max_price_change=None):
-    """
-    Run the complete workflow using CrewAI framework.
-    This actually executes agents through CrewAI, not direct function calls.
-    
-    Args:
-        underperf_threshold: Override default underperformance threshold
-        max_price_change: Override default max price change guardrail
-    
-    Returns:
-        CrewOutput: Results from the CrewAI execution
-    """
-    logger.info("=" * 80)
-    logger.info("STARTING CREWAI INTELLIGENT MANAGEMENT SYSTEM")
-    logger.info("=" * 80)
-    logger.info(f"Underperformance threshold: {underperf_threshold or 'default'}")
-    logger.info(f"Max price change: {max_price_change or 'default'}")
-    logger.info("=" * 80)
-    
-    # Create the crew with all agents and tasks
-    crew = create_crew(underperf_threshold, max_price_change)
-    
-    # Kickoff the crew - this runs all agents sequentially through CrewAI
-    logger.info("\n🚀 Kicking off CrewAI workflow...\n")
+    # Kickoff the crew - this runs agents up to governance
+    logger.info("\n🚀 Kicking off CrewAI workflow (up to governance)...\n")
     result = crew.kickoff()
     
     logger.info("\n" + "=" * 80)
-    logger.info("CREWAI WORKFLOW COMPLETED")
+    logger.info("GOVERNANCE WORKFLOW COMPLETED")
+    logger.info("=" * 80)
+    
+    return result
+
+def run_report_generation():
+    """
+    Run only the report generation after governance approval.
+    
+    Returns:
+        dict: Report generation result
+    """
+    logger.info("=" * 80)
+    logger.info("GENERATING TRANSPARENCY REPORT")
+    logger.info("=" * 80)
+    
+    from agents.report_agent import run_report
+    result = run_report()
+    
+    logger.info("=" * 80)
+    logger.info("REPORT GENERATION COMPLETED")
     logger.info("=" * 80)
     
     return result

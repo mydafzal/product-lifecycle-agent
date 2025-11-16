@@ -13,6 +13,9 @@ from mcp.client.streamable_http import streamablehttp_client
 
 logger = logging.getLogger(__name__)
 
+# Flag to enable/disable MCP server usage
+USE_MCP_SERVER = False  # Set to True to use MCP server, False to use direct CSV access
+
 # Helper function to run async MCP calls
 def _run_mcp_tool(tool_name: str, params: dict = None) -> dict:
     """
@@ -36,63 +39,77 @@ def _run_mcp_tool(tool_name: str, params: dict = None) -> dict:
 
 def get_sales_data(sku_id=None):
     """
-    Returns sales, forecast, plan per SKU as DataFrame.
+    Fetch sales data from MCP server or CSV file.
     
     Args:
-        sku_id: Optional SKU filter
+        sku_id: Optional SKU ID to filter data
     
     Returns:
         DataFrame with sku_id, sales, forecast, plan
     """
-    try:
-        params = {"sku_id": sku_id} if sku_id else {}
-        result = _run_mcp_tool("get_sales_tool", params)
-        
-        # Extract data from MCP result
-        if hasattr(result, 'content') and len(result.content) > 0:
-            content = result.content[0]
-            if hasattr(content, 'text'):
-                data = json.loads(content.text)
-                if data.get("status") == "success":
-                    return pd.DataFrame(data["data"])
-                else:
-                    logger.error(f"MCP tool error: {data.get('error')}")
-                    raise Exception(data.get("error", "Unknown error"))
-        
-        raise Exception("Unexpected response format from MCP server")
-    except Exception as e:
-        logger.error(f"Failed to get sales data from MCP server: {e}")
-        raise
+    if USE_MCP_SERVER:
+        try:
+            params = {"sku_id": sku_id} if sku_id else {}
+            result = _run_mcp_tool("get_sales_tool", params)
+            
+            # Extract data from MCP result
+            if hasattr(result, 'content') and len(result.content) > 0:
+                content = result.content[0]
+                if hasattr(content, 'text'):
+                    data = json.loads(content.text)
+                    if data.get("status") == "success":
+                        return pd.DataFrame(data["data"])
+                    else:
+                        logger.error(f"MCP tool error: {data.get('error')}")
+                        raise Exception(data.get("error", "Unknown error"))
+            
+            raise Exception("Unexpected response format from MCP server")
+        except Exception as e:
+            logger.warning(f"MCP server failed, falling back to direct CSV: {e}")
+            # Fall through to direct CSV access
+    
+    # Direct CSV access (fallback or default)
+    df = pd.read_csv(settings.SALES_INPUT)
+    if sku_id:
+        df = df[df["sku_id"] == sku_id]
+    return df
 
 def get_inventory_data(sku_id=None):
     """
-    Returns inventory and lead_time per SKU as DataFrame.
+    Fetch inventory data from MCP server or CSV file.
     
     Args:
-        sku_id: Optional SKU filter
+        sku_id: Optional SKU ID to filter data
     
     Returns:
         DataFrame with sku_id, inventory, lead_time
     """
-    try:
-        params = {"sku_id": sku_id} if sku_id else {}
-        result = _run_mcp_tool("get_inventory_tool", params)
-        
-        # Extract data from MCP result
-        if hasattr(result, 'content') and len(result.content) > 0:
-            content = result.content[0]
-            if hasattr(content, 'text'):
-                data = json.loads(content.text)
-                if data.get("status") == "success":
-                    return pd.DataFrame(data["data"])
-                else:
-                    logger.error(f"MCP tool error: {data.get('error')}")
-                    raise Exception(data.get("error", "Unknown error"))
-        
-        raise Exception("Unexpected response format from MCP server")
-    except Exception as e:
-        logger.error(f"Failed to get inventory data from MCP server: {e}")
-        raise
+    if USE_MCP_SERVER:
+        try:
+            params = {"sku_id": sku_id} if sku_id else {}
+            result = _run_mcp_tool("get_inventory_tool", params)
+            
+            # Extract data from MCP result
+            if hasattr(result, 'content') and len(result.content) > 0:
+                content = result.content[0]
+                if hasattr(content, 'text'):
+                    data = json.loads(content.text)
+                    if data.get("status") == "success":
+                        return pd.DataFrame(data["data"])
+                    else:
+                        logger.error(f"MCP tool error: {data.get('error')}")
+                        raise Exception(data.get("error", "Unknown error"))
+            
+            raise Exception("Unexpected response format from MCP server")
+        except Exception as e:
+            logger.warning(f"MCP server failed, falling back to direct CSV: {e}")
+            # Fall through to direct CSV access
+    
+    # Direct CSV access (fallback or default)
+    df = pd.read_csv(settings.INVENTORY_INPUT)
+    if sku_id:
+        df = df[df["sku_id"] == sku_id]
+    return df
 
 def get_price_optimizer_data(sku_id=None):
     """
@@ -104,25 +121,32 @@ def get_price_optimizer_data(sku_id=None):
     Returns:
         DataFrame with sku_id, optimal_price, elasticity
     """
-    try:
-        params = {"sku_id": sku_id} if sku_id else {}
-        result = _run_mcp_tool("price_optimizer_tool", params)
-        
-        # Extract data from MCP result
-        if hasattr(result, 'content') and len(result.content) > 0:
-            content = result.content[0]
-            if hasattr(content, 'text'):
-                data = json.loads(content.text)
-                if data.get("status") == "success":
-                    return pd.DataFrame(data["data"])
-                else:
-                    logger.error(f"MCP tool error: {data.get('error')}")
-                    raise Exception(data.get("error", "Unknown error"))
-        
-        raise Exception("Unexpected response format from MCP server")
-    except Exception as e:
-        logger.error(f"Failed to get price optimizer data from MCP server: {e}")
-        raise
+    if USE_MCP_SERVER:
+        try:
+            params = {"sku_id": sku_id} if sku_id else {}
+            result = _run_mcp_tool("price_optimizer_tool", params)
+            
+            # Extract data from MCP result
+            if hasattr(result, 'content') and len(result.content) > 0:
+                content = result.content[0]
+                if hasattr(content, 'text'):
+                    data = json.loads(content.text)
+                    if data.get("status") == "success":
+                        return pd.DataFrame(data["data"])
+                    else:
+                        logger.error(f"MCP tool error: {data.get('error')}")
+                        raise Exception(data.get("error", "Unknown error"))
+            
+            raise Exception("Unexpected response format from MCP server")
+        except Exception as e:
+            logger.warning(f"MCP server failed, falling back to direct CSV: {e}")
+            # Fall through to direct CSV access
+    
+    # Direct CSV access (fallback or default)
+    df = pd.read_csv(settings.PRICE_OPTIMIZER_INPUT)
+    if sku_id:
+        df = df[df["sku_id"] == sku_id]
+    return df
 
 def write_csv(df, path):
     """
@@ -148,7 +172,7 @@ def read_json(path):
 
 def get_marketing_planner_data(sku_id=None):
     """
-    Returns marketing channels, spend, and lift per SKU as DataFrame.
+    Returns marketing channels, spend, lift per SKU as DataFrame.
     
     Args:
         sku_id: Optional SKU filter
@@ -156,25 +180,32 @@ def get_marketing_planner_data(sku_id=None):
     Returns:
         DataFrame with sku_id, channels, spend, lift
     """
-    try:
-        params = {"sku_id": sku_id} if sku_id else {}
-        result = _run_mcp_tool("marketing_planner_tool", params)
-        
-        # Extract data from MCP result
-        if hasattr(result, 'content') and len(result.content) > 0:
-            content = result.content[0]
-            if hasattr(content, 'text'):
-                data = json.loads(content.text)
-                if data.get("status") == "success":
-                    return pd.DataFrame(data["data"])
-                else:
-                    logger.error(f"MCP tool error: {data.get('error')}")
-                    raise Exception(data.get("error", "Unknown error"))
-        
-        raise Exception("Unexpected response format from MCP server")
-    except Exception as e:
-        logger.error(f"Failed to get marketing planner data from MCP server: {e}")
-        raise
+    if USE_MCP_SERVER:
+        try:
+            params = {"sku_id": sku_id} if sku_id else {}
+            result = _run_mcp_tool("marketing_planner_tool", params)
+            
+            # Extract data from MCP result
+            if hasattr(result, 'content') and len(result.content) > 0:
+                content = result.content[0]
+                if hasattr(content, 'text'):
+                    data = json.loads(content.text)
+                    if data.get("status") == "success":
+                        return pd.DataFrame(data["data"])
+                    else:
+                        logger.error(f"MCP tool error: {data.get('error')}")
+                        raise Exception(data.get("error", "Unknown error"))
+            
+            raise Exception("Unexpected response format from MCP server")
+        except Exception as e:
+            logger.warning(f"MCP server failed, falling back to direct CSV: {e}")
+            # Fall through to direct CSV access
+    
+    # Direct CSV access (fallback or default)
+    df = pd.read_csv(settings.MARKETING_PLANNER_INPUT)
+    if sku_id:
+        df = df[df["sku_id"] == sku_id]
+    return df
 
 def get_labor_simulator_data(sku_id=None):
     """
@@ -186,22 +217,29 @@ def get_labor_simulator_data(sku_id=None):
     Returns:
         DataFrame with sku_id, labor_hours, cost
     """
-    try:
-        params = {"sku_id": sku_id} if sku_id else {}
-        result = _run_mcp_tool("labor_simulator_tool", params)
-        
-        # Extract data from MCP result
-        if hasattr(result, 'content') and len(result.content) > 0:
-            content = result.content[0]
-            if hasattr(content, 'text'):
-                data = json.loads(content.text)
-                if data.get("status") == "success":
-                    return pd.DataFrame(data["data"])
-                else:
-                    logger.error(f"MCP tool error: {data.get('error')}")
-                    raise Exception(data.get("error", "Unknown error"))
-        
-        raise Exception("Unexpected response format from MCP server")
-    except Exception as e:
-        logger.error(f"Failed to get labor simulator data from MCP server: {e}")
-        raise
+    if USE_MCP_SERVER:
+        try:
+            params = {"sku_id": sku_id} if sku_id else {}
+            result = _run_mcp_tool("labor_simulator_tool", params)
+            
+            # Extract data from MCP result
+            if hasattr(result, 'content') and len(result.content) > 0:
+                content = result.content[0]
+                if hasattr(content, 'text'):
+                    data = json.loads(content.text)
+                    if data.get("status") == "success":
+                        return pd.DataFrame(data["data"])
+                    else:
+                        logger.error(f"MCP tool error: {data.get('error')}")
+                        raise Exception(data.get("error", "Unknown error"))
+            
+            raise Exception("Unexpected response format from MCP server")
+        except Exception as e:
+            logger.warning(f"MCP server failed, falling back to direct CSV: {e}")
+            # Fall through to direct CSV access
+    
+    # Direct CSV access (fallback or default)
+    df = pd.read_csv(settings.LABOR_SIMULATOR_INPUT)
+    if sku_id:
+        df = df[df["sku_id"] == sku_id]
+    return df

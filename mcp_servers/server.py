@@ -1,4 +1,10 @@
 import logging
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
@@ -6,7 +12,7 @@ from starlette.routing import Mount
 from mcp.server.fastmcp import FastMCP
 
 # Your CSV-backed functions
-from .data_functions import (
+from mcp_servers.data_functions import (
     get_sales,
     get_inventory,
     price_optimizer,

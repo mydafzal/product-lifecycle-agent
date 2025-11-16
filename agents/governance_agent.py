@@ -152,6 +152,21 @@ def run_governance():
         output_cols = ["sku_id", "rank", "action_type", "decision", "reason", "roi"]
         write_csv(df[output_cols], settings.FINAL_ACTIONS)
         
+        # Save governance decisions for popup (JSON format for easy frontend consumption)
+        governance_decisions = {
+            "auto_approved": df[df["decision"] == "auto-approved"][["sku_id", "rank", "roi", "reason"]].to_dict('records'),
+            "manual_review": df[df["decision"] == "manual-review"][["sku_id", "rank", "roi", "reason"]].to_dict('records'),
+            "rejected": df[df["decision"] == "rejected"][["sku_id", "rank", "roi", "reason"]].to_dict('records'),
+            "timestamp": datetime.now().isoformat(),
+            "total_count": len(df)
+        }
+        
+        governance_json_path = settings.OUTPUT_DIR / "governance_decisions.json"
+        with open(governance_json_path, 'w') as f:
+            json.dump(governance_decisions, f, indent=2)
+        
+        logger.info(f"   - Governance decisions: {governance_json_path}")
+        
         # Create audit log
         audit_entries = []
         for _, row in df.iterrows():
@@ -187,7 +202,9 @@ def run_governance():
             "manual_review": manual_review,
             "rejected": rejected,
             "status": "success",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "governance_decisions": governance_decisions,
+            "needs_human_review": manual_review > 0
         }
         
     except Exception as e:
