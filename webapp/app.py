@@ -2,6 +2,7 @@
 Flask Web Application for Intelligent Management System
 Provides UI for uploading CSV files, running workflows, and viewing results
 """
+import utils.session
 import os
 import sys
 import json
